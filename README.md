@@ -2,11 +2,20 @@
 This is a repo for creating beautiful Agar plate art with Opentron for HTGAA
 Here is a video that I made on how to use it.
 
+The Agar Plate Designer:
+https://alirezahekmati.github.io/Plate-Art-Designer/
 
 The colab link:
 https://colab.research.google.com/drive/19UQSDY941dfn4OzqFRlSfln8WDtr_y60?usp=sharing
 
+## Link to the tutorial on how to use:
+![image](https://github.com/user-attachments/assets/cf681deb-0a42-43eb-a60b-4502c789042a)
 
+
+
+![image](https://github.com/user-attachments/assets/830fc122-24e1-4e66-89ee-b0324bd04bde)
+
+![image](https://github.com/user-attachments/assets/53927ebb-ad52-46cc-8dda-28f463f069c1)
 
 
 # Okay so the document is finsihed
