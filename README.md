@@ -16,3 +16,8 @@ just a demo for collab and haven't been tested for safety for opentron)
 Add contribution( love to add or make this better with you!) 
 
 and more ...
+
+#Some Ideas to implement(You can contribute!):
+Making a time estimator: base on the number of points estimiate how long it will take for Opentron to run the code.
+
+Make the code or the data more efficient: I think we can have similiar resulotion with way less data so finding ways to optimize data or the code so it needs less data there for more speed.
