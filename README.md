@@ -9,6 +9,8 @@ The colab link:
 https://colab.research.google.com/drive/19UQSDY941dfn4OzqFRlSfln8WDtr_y60?usp=sharing
 
 ## Link to the tutorial on how to use:
+### https://www.youtube.com/watch?v=K5nR0eYHLEk
+![image](https://github.com/user-attachments/assets/a504720b-dd16-41b3-ae8a-9dc1bd70d490)
 
 
 
