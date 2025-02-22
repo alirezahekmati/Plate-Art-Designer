@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Circular Drawing Board with Image Upload</title>
+    <style>
+      canvas {
+        border: 1px solid black;
+      }
+      #controls {
+        margin-top: 10px;
+      }
+      #coordinates {
+        margin-top: 10px;
+        white-space: pre;
+        font-family: monospace;
+      }
+      #copyButton {
+        margin: 10px 0;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .color-container {
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <div id="controls">
+      <label>Width:
+        <input type="number" id="width" min="0.01" max="20" step="0.01" value="1"/>
+      </label>
+      <div class="color-container">
+        <label>Color:
+          <select id="color">
+            <option value="black">Black</option>
+            <option value="blue">Blue</option>
+            <option value="red">Red</option>
+            <option value="green">Green</option>
+            <option value="yellow">Yellow</option>
+            <option value="purple">Purple</option>
+            <option value="orange">Orange</option>
+            <option value="brown">Brown</option>
+            <option value="pink">Pink</option>
+            <option value="gray">Gray</option>
+            <option value="custom">Custom Color</option>
+          </select>
+        </label>
+        <input type="color" id="customColor" style="display: none;"/>
+      </div>
+      <input type="file" id="uploadImage" accept="image/*" />
+      <button id="copyButton">Copy Coordinates Data</button>
+    </div>
+    <pre id="coordinates"></pre>
+
+    <script>
+      // Get DOM elements
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const widthInput = document.getElementById("width");
+      const colorSelect = document.getElementById("color");
+      const uploadImage = document.getElementById("uploadImage");
+      const coordinatesPre = document.getElementById("coordinates");
+      const copyButton = document.getElementById('copyButton');
+      const customColorInput = document.getElementById('customColor');
+
+      // State variables
+      let isDrawing = false;
+      let currentPath = null;
+      let paths = [];
+      let uploadedImage = null;
+      
+
+      // Get mouse position relative to canvas
+      function getMousePos(event) {
+        const rect = canvas.getBoundingClientRect();
+        const px = event.clientX - rect.left;
+        const py = event.clientY - rect.top;
+        return { px, py };
+      }
+
+      // Convert pixel coordinates to circle coordinate system
+      function pixelToCoord(px, py) {
+        const x = (px - 200) / 5; // Center at (200,200), 5 pixels per unit
+        const y = (200 - py) / 5; // y increases upwards
+        return { x, y };
+      }
+
+      // Check if point is inside the circle (radius 200 pixels = 40 units)
+      function isInsideCircle(px, py) {
+        const dx = px - 200;
+        const dy = py - 200;
+        return dx * dx + dy * dy <= 200 * 200;
+      }
+
+      // Get current color (including custom color)
+      function getCurrentColor() {
+        return colorSelect.value === 'custom' ? customColorInput.value : colorSelect.value;
+      }
+
+      // Render the canvas
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the uploaded image clipped to the circle
+        if (uploadedImage) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(200, 200, 200, 0, 2 * Math.PI);
+          ctx.clip();
+          ctx.drawImage(uploadedImage, 0, 0, 400, 400);
+          ctx.restore();
+        }
+
+        // Draw circle boundary
+        ctx.beginPath();
+        ctx.arc(200, 200, 200, 0, 2 * Math.PI);
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Draw all completed paths
+        paths.forEach((path) => {
+          if (path.points.length === 0) return;
+          ctx.strokeStyle = path.color;
+          ctx.lineWidth = path.width * 5; // Convert units to pixels
+          if (path.points.length === 1) {
+            // Draw a dot
+            const point = path.points[0];
+            const px = 200 + point.x * 5;
+            const py = 200 - point.y * 5;
+            ctx.beginPath();
+            ctx.arc(px, py, (path.width * 5) / 2, 0, 2 * Math.PI);
+            ctx.fillStyle = path.color;
+            ctx.fill();
+          } else {
+            // Draw lines
+            ctx.beginPath();
+            path.points.forEach((point, index) => {
+              const px = 200 + point.x * 5;
+              const py = 200 - point.y * 5;
+              if (index === 0) {
+                ctx.moveTo(px, py);
+              } else {
+                ctx.lineTo(px, py);
+              }
+            });
+            ctx.stroke();
+          }
+        });
+
+        // Draw current path if drawing
+        if (isDrawing && currentPath && currentPath.points.length > 0) {
+          ctx.strokeStyle = currentPath.color;
+          ctx.lineWidth = currentPath.width * 5;
+          if (currentPath.points.length === 1) {
+            // Draw a dot
+            const point = currentPath.points[0];
+            const px = 200 + point.x * 5;
+            const py = 200 - point.y * 5;
+            ctx.beginPath();
+            ctx.arc(px, py, (currentPath.width * 5) / 2, 0, 2 * Math.PI);
+            ctx.fillStyle = currentPath.color;
+            ctx.fill();
+          } else {
+            // Draw lines
+            ctx.beginPath();
+            currentPath.points.forEach((point, index) => {
+              const px = 200 + point.x * 5;
+              const py = 200 - point.y * 5;
+              if (index === 0) {
+                ctx.moveTo(px, py);
+              } else {
+                ctx.lineTo(px, py);
+              }
+            });
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Update coordinates display
+      function updateCoordinates() {
+        const data = {
+          paths: paths,
+          
+        };
+        coordinatesPre.textContent = JSON.stringify(data, null, 2);
+      }
+
+      // Mouse event handlers
+      canvas.addEventListener("mousedown", (event) => {
+        const { px, py } = getMousePos(event);
+        if (!isInsideCircle(px, py)) return;
+        isDrawing = true;
+        const width = parseFloat(widthInput.value);
+        const color = getCurrentColor();
+        currentPath = { width, color, points: [] };
+        const { x, y } = pixelToCoord(px, py);
+        currentPath.points.push({ x, y });
+        render();
+      });
+
+      canvas.addEventListener("mousemove", (event) => {
+        if (!isDrawing) return;
+        const { px, py } = getMousePos(event);
+        if (!isInsideCircle(px, py)) return;
+        const { x, y } = pixelToCoord(px, py);
+        currentPath.points.push({ x, y });
+        render();
+      });
+
+      canvas.addEventListener("mouseup", () => {
+        if (isDrawing) {
+          isDrawing = false;
+          if (currentPath.points.length > 0) {
+            paths.push(currentPath);
+            currentPath = null;
+            updateCoordinates();
+            render();
+          }
+        }
+      });
+
+      canvas.addEventListener("mouseleave", () => {
+        if (isDrawing) {
+          isDrawing = false;
+          if (currentPath.points.length > 0) {
+            paths.push(currentPath);
+            currentPath = null;
+            updateCoordinates();
+            render();
+          }
+        }
+      });
+
+      // Color selection handlers
+      colorSelect.addEventListener('change', (event) => {
+        if (event.target.value === 'custom') {
+          customColorInput.style.display = 'inline-block';
+          customColorInput.click();
+        } else {
+          customColorInput.style.display = 'none';
+        }
+      });
+
+      customColorInput.addEventListener('input', (event) => {
+        const customColor = event.target.value;
+        let customOption = colorSelect.querySelector('option[value="custom"]');
+        if (!customOption) {
+          customOption = new Option('Custom Color', 'custom');
+          colorSelect.add(customOption);
+        }
+        customOption.selected = true;
+      });
+
+      // Copy button handler
+      copyButton.addEventListener('click', () => {
+        const data = {
+          paths: paths,
+          
+        };
+        const jsonString = JSON.stringify(data, null, 2);
+        
+        navigator.clipboard.writeText(jsonString).then(() => {
+          alert('Coordinates data copied to clipboard!');
+        }).catch(err => {
+          console.error('Failed to copy text: ', err);
+        });
+      });
+
+      // Image upload handler
+      uploadImage.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              uploadedImage = img;
+
+              // Draw image to analyze pixel data
+              ctx.save();
+              ctx.beginPath();
+              ctx.arc(200, 200, 200, 0, 2 * Math.PI);
+              ctx.clip();
+              ctx.drawImage(img, 0, 0, 400, 400);
+              ctx.restore();
+
+              // Get pixel data
+              const imageData = ctx.getImageData(0, 0, 400, 400);
+              const data = imageData.data;
+              
+
+              render();
+              updateCoordinates();
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Initial setup
+      render();
+      updateCoordinates();
+    </script>
+  </body>
+</html>
