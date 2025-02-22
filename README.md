@@ -9,7 +9,6 @@ The colab link:
 https://colab.research.google.com/drive/19UQSDY941dfn4OzqFRlSfln8WDtr_y60?usp=sharing
 
 ## Link to the tutorial on how to use:
-![image](https://github.com/user-attachments/assets/cf681deb-0a42-43eb-a60b-4502c789042a)
 
 
 
