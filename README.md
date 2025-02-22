@@ -1,6 +1,42 @@
 # Plate-Art-Designer
 This is a repo for creating beautiful Agar plate art with Opentron for HTGAA
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Okay so the document is finsihed
+### If you wan't to contribute there are some ideas you can see below(or you can come up with new one yourself)
+
+
+
 ## To-do
 add the code base
 
@@ -21,3 +57,7 @@ and more ...
 Making a time estimator: base on the number of points estimiate how long it will take for Opentron to run the code.
 
 Make the code or the data more efficient: I think we can have similiar resulotion with way less data so finding ways to optimize data or the code so it needs less data there for more speed.
+
+Change the code for collab so it will accept more coler options
+
+Making the layout look nicer and beautiful
